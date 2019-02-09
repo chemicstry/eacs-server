@@ -7,8 +7,8 @@ import { Tag } from './models/Tag';
 import { Group } from './models/Group';
 import { GroupPermission } from './models/GroupPermission';
 import path from 'path';
-import { create } from 'domain';
 import { UserGroup } from './models/UserGroup';
+import { Event } from './models/Event';
 
 class SequelizeDB implements Database {
   private db!: Sequelize;
@@ -241,6 +241,15 @@ class SequelizeDB implements Database {
     var id = parseInt(ids);
     Group.destroy({
       where: {id}
+    })
+  }
+
+  public async logEvent(event: string, identifier: string, userId: string, data: object) {
+    await Event.create({
+      event,
+      identifier,
+      userId,
+      data: JSON.stringify(data)
     })
   }
 }

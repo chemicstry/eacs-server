@@ -18,6 +18,11 @@ const keyProvider = new HKDF(IKM, 'sha256', Buffer.from(options.hkdf_salt));
 
 type TransceiveFn = (buf: Buffer) => Promise<Buffer>
 
+interface AuthResult {
+  userId: string,
+  permissions: string[]
+}
+
 // Returns tag object bound to RPC transceive function
 function GetTag(tagInfoRPC: any, transceive: TransceiveFn): Tag {
   // Parse arguments
@@ -51,14 +56,17 @@ export default function InitRFIDRPC(node: RPCNode, acl: SocketACL) {
   }
 
   // Returns list of permissions authenticated user has
-  async function RFIDAuthenticate(tagInfo: TagInfo): Promise<string[]> {
+  async function RFIDAuthenticate(tagInfo: TagInfo): Promise<AuthResult> {
     let tag = GetTag(tagInfo, Transceive);
 
     // Authenticate RFID with crypto if enabled
     if (options.rfidCrypto) {
       try {
         if (!await tag.Authenticate(keyProvider))
-          return [];
+          return {
+            userId: '',
+            permissions: []
+          };
       } catch (e) {
         Log.error(`rfid:auth(): Authentication error: ${e.message}`, e);
         throw new RPCMethodError(RPCErrors.AUTHENTICATE_FAILED, `Error authenticating: ${e.message}`);
@@ -69,7 +77,7 @@ export default function InitRFIDRPC(node: RPCNode, acl: SocketACL) {
     try {
       var userId = await db.findUserIdByTag(tagInfo.UID.toString('hex'));
       var permissions = await db.getUserPermissions(userId);
-      return permissions;
+      return {userId, permissions};
     } catch (err) {
       Log.error("auth:uid error", err);
       throw new RPCMethodError(RPCErrors.GENERIC, err);
@@ -79,8 +87,9 @@ export default function InitRFIDRPC(node: RPCNode, acl: SocketACL) {
   // Authenticates users against socket identifier (JWT token identifier)
   node.bind("rfid:auth", async (tagInfo: any) => {
     Log.debug("rfid:auth()", tagInfo);
-    var permissions = await RFIDAuthenticate(tagInfo);
-    return permissions.includes(acl.identifier);
+    var authResult = await RFIDAuthenticate(tagInfo);
+    db.logEvent("rfid:auth", acl.identifier, authResult.userId, authResult);
+    return authResult.permissions.includes(acl.identifier);
   });
 
   // Authenticates tag and returns user info
@@ -125,6 +134,7 @@ export default function InitRFIDRPC(node: RPCNode, acl: SocketACL) {
     // Initialize key
     try {
       var res = await tag.InitializeKey(keyProvider);
+      db.logEvent("rfid:initKey", acl.identifier, '', {});
     } catch (e) {
       Log.error(`rfid:initKey(): error: ${e.message}`, e);
       throw new RPCMethodError(RPCErrors.INITIALIZE_KEY_FAILED, e.message);
@@ -139,10 +149,12 @@ export default function InitRFIDRPC(node: RPCNode, acl: SocketACL) {
     console.log(tagInfo);
 
     // Authenticate and append received permissions
-    var permissions = await RFIDAuthenticate(tagInfo);
-    acl.externalPerms = permissions;
+    var authResult = await RFIDAuthenticate(tagInfo);
+    acl.externalPerms = authResult.permissions;
+
+    db.logEvent("rfid:authSocket", acl.identifier, authResult.userId, authResult);
 
     // return granted permissions
-    return permissions;
+    return authResult.permissions;
   })
 }

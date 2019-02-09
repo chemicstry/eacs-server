@@ -23,6 +23,8 @@ interface Database {
   getGroups(): Promise<Group[]>;
   upsertGroup(data: Group): Promise<void>;
   deleteGroup(id: string): Promise<void>;
+
+  logEvent(event: string, identifier: string, userId: string, data: object): Promise<void>;
 }
 
 export {

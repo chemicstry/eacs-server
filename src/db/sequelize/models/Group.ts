@@ -1,4 +1,4 @@
-import { Table, Model, PrimaryKey, AutoIncrement, Column, HasMany, BelongsToMany } from 'sequelize-typescript';
+import { Table, Model, PrimaryKey, AutoIncrement, Column, HasMany, BelongsToMany, CreatedAt, UpdatedAt, DeletedAt } from 'sequelize-typescript';
 import { GroupPermission } from './GroupPermission';
 import { User } from './User';
 import { UserGroup } from './UserGroup';
@@ -21,4 +21,13 @@ export class Group extends Model<Group> {
 
   @BelongsToMany(() => User, () => UserGroup)
   users!: User[];
+
+  @CreatedAt
+  createdAt!: Date;
+
+  @UpdatedAt
+  updatedAt!: Date;
+
+  @DeletedAt
+  deletedAt!: Date;
 }

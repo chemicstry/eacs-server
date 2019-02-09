@@ -11,7 +11,7 @@ import { Log } from './Log';
 import { WSTransport, RPCNode } from 'modular-json-rpc';
 import LowDB from './db/lowdb';
 import SequelizeDB from './db/sequelize';
-import * as mdns from 'mdns';
+import bonjour from 'bonjour';
 import { initDB } from './dbInstance';
 import InitRPC from './rpc';
 
@@ -48,15 +48,14 @@ else {
 
 // Start mdns advertisement
 if (options.mdns) {
-  var ad = mdns.createAdvertisement(mdns.tcp("eacs-user-auth"), options.port);
-  ad.start();
+  bonjour().publish({ name: 'eacs-server', type: 'eacs-server', port: options.port })
   Log.info("Started mDNS advertisement");
 }
 
 // Init database
 if (options.dbType === "sequelize") {
   initDB(new SequelizeDB({
-    url: "postgres://eacs:eacs@localhost/eacs",
+    url: options.sequelizeURL,
     operatorsAliases: false
   }));
 } else if (options.dbType == "lowdb") {

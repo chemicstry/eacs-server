@@ -27,8 +27,7 @@ class LowDB implements Database {
         }
     }
 
-    public async findUserIdByTag(UID: String)
-    {
+    public async findUserIdByTag(UID: String) {
         let users = <User[]><any>await this.db.get('users').filter(u => {
             return u.tags.includes(UID);
         }).value();
@@ -39,9 +38,8 @@ class LowDB implements Database {
         return users[0].id;
     }
 
-    public async getUserPermissions(userId: string)
-    {
-        var user = <User><any>await this.db.get('users').find({id: userId}).value();
+    public async getUserPermissions(userId: string) {
+        var user = <User><any>await this.db.get('users').find({ id: userId }).value();
 
         // Find groups that user belongs to
         var groups = <Group[]><any>await this.db.get('groups').filter(g => {
@@ -56,20 +54,20 @@ class LowDB implements Database {
         return permissions;
     }
 
-    public async getUsers() { 
+    public async getUsers() {
         return await this.db.get('users').value();
     }
 
     public async upsertUser(data: any) {
         // Update if exists, create new otherwise
         if (data.id)
-            this.db.get('users').find({id:data.id}).assign(data).write();
+            this.db.get('users').find({ id: data.id }).assign(data).write();
         else
-            this.db.get('users').push({id:ShortId.generate(),...data}).write();
+            this.db.get('users').push({ id: ShortId.generate(), ...data }).write();
     }
 
     public async deleteUser(id: string) {
-        this.db.get('users').remove({id}).write();
+        this.db.get('users').remove({ id }).write();
     }
 
     public async getGroups() {
@@ -79,13 +77,23 @@ class LowDB implements Database {
     public async upsertGroup(data: any) {
         // Update if exists, create new otherwise
         if (data.id)
-            this.db.get('groups').find({id:data.id}).assign(data).write();
+            this.db.get('groups').find({ id: data.id }).assign(data).write();
         else
-            this.db.get('groups').push({id:ShortId.generate(),...data}).write();
+            this.db.get('groups').push({ id: ShortId.generate(), ...data }).write();
     }
 
     public async deleteGroup(id: string) {
-        this.db.get('groups').remove({id}).write();
+        this.db.get('groups').remove({ id }).write();
+    }
+
+    public async logEvent(event: string, identifier: string, userId: string, data: object) {
+        await this.db.get('events').push({
+            date: Date.now(),
+            event,
+            identifier,
+            userId,
+            data
+        });
     }
 }
 
