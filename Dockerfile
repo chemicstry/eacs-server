@@ -1,5 +1,5 @@
 # Node 8.x
-FROM node:carbon
+FROM node:10-alpine
 
 # Copy app files
 WORKDIR /app
