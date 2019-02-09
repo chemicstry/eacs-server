@@ -1,5 +1,7 @@
+ARG node=node:10-alpine
+
 # Node 8.x
-FROM node:10-alpine
+FROM $node
 
 # Copy app files
 WORKDIR /app
