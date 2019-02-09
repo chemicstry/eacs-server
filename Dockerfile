@@ -6,10 +6,11 @@ WORKDIR /app
 COPY . /app
 
 # Install dependencies
-RUN npm install
+RUN npm install -g yarn
+RUN yarn install
 
 # Build app
-RUN npm run build
+RUN yarn run build
 
 # Run
 ENTRYPOINT ["node", "dist/index.js"]
