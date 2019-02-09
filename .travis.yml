@@ -1,0 +1,28 @@
+language: node_js
+
+node_js:
+- stable
+
+install:
+- npm install
+
+script:
+- npm run cover
+
+after_script:
+- cat coverage/lcov.info | node_modules/coveralls/bin/coveralls.js
+
+after_success:
+  - docker login -u $DOCKER_USER -p $DOCKER_PASS
+  - export REPO=chemicstry/eacs-server
+  - export TAG=`if [ "$TRAVIS_BRANCH" == "master" ]; then echo "latest"; else echo $TRAVIS_BRANCH ; fi`
+  - docker build -f Dockerfile -t $REPO:$COMMIT .
+  - docker tag $REPO:$COMMIT $REPO:$TAG
+  - docker tag $REPO:$COMMIT $REPO:travis-$TRAVIS_BUILD_NUMBER
+  - docker push $REPO
+
+env:
+  global:
+  - secure: dR1G3GkYeP78Tyuj9C8nz7tjPaJxrZMOYBw0CA2actj1n2q0SW4Ms1hsyLHnj0HKhE+KMm4jjP2WKeUWajZi/HC3uzhuMXSK7rL0Fa8m58rauL7b9lLBD1K3xZB18eKCOKEr87liUxPqoo+tWX5mRriOZrnjmngBWx1PB0EptO7tm5Qr1ET9G31HTWya9YBaQ+3PGtR0GG+wDzL4vuVR2BKCpkBH0bwyetvGFib8a2MpxBSnbG9oc86d4RugHRqv+0/Kb432rXBB0bhf2oNNu0+7o0DlsEnTdrBAuCbxX/49h6kBin58XDTwMXKsUVVZ/nwy8wgyTCB125TggQBvZwkqzM9R7QmvKeIRwmahUyNyuSbuy8nZH0DI1YC44OwYD3/BrDHdBxjbJ4ly+P3vHTGzHAfFd8wdXvt+GPRNyLRxlGokryprzwbCVa7FyQp5767nccj9m7Gqm6T6IqOmKWjwwL98XwSk3Dj9QnyScfcxEjkwofCGbXjE2GxJdFpCyzYijFQpzXBQVUi9Fm0rc41I0Gan1YP1bNPEk08gFmhzNN1iNqVGGFnuwUTWC23KukQceUHAZq4wZ6SZTPgzTZQ9D4d/mUvrC9UIpEc5ypeCqgwIjq90nMYvI/KMe72gpHLdSlO/QMjiTrzBIlXjSrzhClbcC5WiWmuS0zIKd9Q=
+  - secure: cgR4Rk41LQ8IFDvOzeqR5dD0AyZaUbzwpNLWYNEVqS8fal25vhC0rg8D5VmONdFy/Mx64BsGVjnXD5Xu3PZ6qWUH93YIEd0Y/sJUUDJW8dgKRcPf5TCRYUVIivXFTBMdAW8XIHjnLChvk9z2G+hI8l4mhQI7WbPseup4XqMkqwhA9p4Fjjf3R59i0L6G4j8x19ZLYgZdbBMc1m8e0ImIKsqUpDkTZYgmjHfW1phzcS7nkAc44MVxidUn/hFGG2vIon82oqWu67x1nSJclcp8DThssrmxTJOI9oJjnWX/dUPXzsu50vke4HnKBQ3JG+zxwvvfNIdLgsIqJ3Od0LEIeQQfFBApQT6qN+sKQEJH4rnWy81FGulVNn97xtCwyMlu8eY3zBCaHi8gGHKt3VtFvlTnYB2ZKBHOxqrTYojSzkzdFdlKlJcRZ0G7yFd0DA6KIN+zXgouX26nPImfJVGitsRZFH9iVpkhkL3WtzFDVrU+Web9Kg6Fkc3VjRbxpyyoKYpZq9frN4F46GtINsTJCrN8EksyR1oCF306an7F49I+IInqwQidFwf2CkCW0yleAS+w+xRmERXxwHMSPjWP5pCxopzjddwQR/5Hd0Zdt31+eMRLyN5aK60HRBQ6QysaAw/6nQxjoQ8Hij9rQnuK7SOyl2AmxdL9GmzeljhSQFU=
+  - COMMIT=${TRAVIS_COMMIT::8}
