@@ -41,18 +41,6 @@ function GetTag(tagInfoRPC: any, transceive: TransceiveFn): Tag {
 }
 
 export default function InitRFIDRPC(node: RPCNode, acl: SocketACL) {
-  // object - permission (i.e. main door, lights, etc)
-  /*node.bind("auid", async (object: string, uid: string) => {
-    RequirePermission(acl, "auth:uid");
- 
-    try {
-      return await db.authUID(uid, object);
-    } catch (err) {
-      Log.error("auth:uid error", err);
-      throw new RPCMethodError(RPCErrors.GENERIC, err);
-    }
-  });*/
-
   // Exchanges data with remote tag
   async function Transceive(buf: Buffer) {
     // Call remote transceive function
