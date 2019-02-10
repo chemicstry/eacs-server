@@ -34,6 +34,6 @@ env:
     - COMMIT=${TRAVIS_COMMIT::8}
   matrix:
     - ARCH=amd64
-#    - ARCH=arm32v6
-    - ARCH=arm32v7
+    - ARCH=arm32v6
+#    - ARCH=arm32v7
 #    - ARCH=arm64v8
