@@ -1,9 +1,9 @@
 import { RPCNode } from 'modular-json-rpc';
-import { db } from '../dbInstance';
-import { Log } from '../Log';
+import { db } from 'dbInstance';
+import { Log } from 'Log';
 import { RPCMethodError } from 'modular-json-rpc/dist/Defines';
-import { RequirePermission, RPCErrors } from '../utils';
-import { SocketACL } from '../socket';
+import { RequirePermission, RPCErrors } from 'utils';
+import { SocketACL } from 'socket';
 
 export default function InitAdminRPC(node: RPCNode, acl: SocketACL) {
   node.bind("admin:getUsers", async () => {

@@ -7,13 +7,13 @@ import * as WebSocket from 'ws';
 import { readFileSync } from 'fs';
 import { IncomingMessage } from 'http';
 import * as https from 'https';
-import { Log } from './Log';
+import { Log } from 'Log';
 import { WSTransport, RPCNode } from 'modular-json-rpc';
-import LowDB from './db/lowdb';
-import SequelizeDB from './db/sequelize';
+import LowDB from 'db/lowdb';
+import SequelizeDB from 'db/sequelize';
 import bonjour from 'bonjour';
-import { initDB } from './dbInstance';
-import InitRPC from './rpc';
+import { initDB } from 'dbInstance';
+import InitRPC from 'rpc';
 
 // Load JWT public key
 const jwtPublicKey = readFileSync(options.jwtPublicKey, "utf8");

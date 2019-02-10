@@ -1,5 +1,5 @@
 import { Tag, TagInfo, TagConstructor} from './Tag';
-import { Log } from 'src/Log';
+import { Log } from 'Log';
 import * as fs from 'fs';
 import * as path from 'path';
 

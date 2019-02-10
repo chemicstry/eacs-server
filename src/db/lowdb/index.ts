@@ -1,9 +1,8 @@
 import lowdb from 'lowdb';
 import FileAsync from 'lowdb/adapters/FileAsync';
-import { Log } from '../../Log';
+import { Log } from 'Log';
 import ShortId from 'shortid';
-import { Database, Group } from '..';
-import { User } from 'src/db';
+import { Database, Group, User } from 'db';
 
 class LowDB implements Database {
     private db!: lowdb.LowdbAsync<any>;

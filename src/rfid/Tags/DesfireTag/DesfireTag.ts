@@ -1,6 +1,6 @@
-import { Tag, TagInfo, TagTransceiveFn } from '../../Tag';
-import { Log } from 'src/Log';
-import { KeyProvider } from '../../KeyProvider';
+import { Tag, TagInfo, TagTransceiveFn } from 'rfid/Tag';
+import { Log } from 'Log';
+import { KeyProvider } from 'rfid/KeyProvider';
 import { DesfireKey, DesfireKeyAES, DesfireKey2K3DES, DesfireKey2K3DESDefault, DesfireKey3K3DES } from './DesfireKey';
 
 // Unique desfire AID used in select file ISO7816-4 instruction

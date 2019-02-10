@@ -1,53 +1,27 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.default = [
-    {
-        name: 'port',
-        alias: 'p',
-        type: Number,
-        defaultValue: 3000,
-        description: 'Port number of websocket'
-    },
-    {
-        name: 'host',
-        alias: 'h',
-        type: String,
-        defaultValue: '::',
-        description: 'Host (IP) of websocket'
-    },
-    {
-        name: 'tls_cert',
-        type: String,
-        defaultValue: 'tls_cert.pem',
-        description: 'TLS certificate file (leave blank to disable TLS)'
-    },
-    {
-        name: 'tls_key',
-        type: String,
-        defaultValue: 'tls_key.pem',
-        description: 'TLS key file'
-    },
-    {
-        name: 'jwtPublicKey',
-        type: String,
-        defaultValue: 'jwt.pem',
-        description: 'Public key (in PEM format) used for JWT verification'
-    },
-    {
-        name: 'mdns',
-        type: Boolean,
-        defaultValue: true,
-        description: 'Use mdns for service discovery'
-    },
-    {
-        name: 'dbFile',
-        type: String,
-        defaultValue: 'db.json',
-        description: 'LowDB file for storing user data'
-    },
-    {
-        name: 'help',
-        type: Boolean,
-        description: 'Prints usage information'
+const commandLineArgs = require("command-line-args");
+const commandLineUsage = require("command-line-usage");
+const optionDefinitions_1 = __importDefault(require("./optionDefinitions"));
+function initOptions() {
+    exports.options = commandLineArgs(optionDefinitions_1.default);
+    // Print usage
+    if (exports.options.help) {
+        const sections = [
+            {
+                header: 'eacs-server',
+                content: 'Extensible Access Control System Server'
+            },
+            {
+                header: 'Options',
+                optionList: optionDefinitions_1.default
+            }
+        ];
+        console.log(commandLineUsage(sections));
+        process.exit();
     }
-];
+}
+exports.initOptions = initOptions;

@@ -18,6 +18,7 @@ FROM $target
 COPY --from=build /app /app
 
 # Run
+ENV NODE_PATH "app/dist"
 ENTRYPOINT ["node", "app/dist/index.js"]
 
 # Expose port 3000

@@ -1,14 +1,13 @@
 import { RPCNode } from 'modular-json-rpc';
-import { db } from 'src/dbInstance';
-import { Log } from 'src/Log';
+import { db } from 'dbInstance';
+import { Log } from 'Log';
 import { RPCMethodError } from 'modular-json-rpc/dist/Defines';
-import { RequirePermission, RPCErrors } from 'src/utils';
-import { SocketACL } from 'src/socket';
-import { options } from 'src/options';
-import { HKDF } from 'src/rfid/KeyProvider';
-import { Tag, TagInfo, TagConstructor } from 'src/rfid/Tag';
-import { TagFactory } from 'src/rfid/TagFactory';
-import { User } from '../db/sequelize/models/User';
+import { RequirePermission, RPCErrors } from 'utils';
+import { SocketACL } from 'socket';
+import { options } from 'options';
+import { HKDF } from 'rfid/KeyProvider';
+import { Tag, TagInfo, TagConstructor } from 'rfid/Tag';
+import { TagFactory } from 'rfid/TagFactory';
 
 // Initial keying material used to derive keys
 const IKM = Buffer.from(options.hkdf_ikm, 'hex');

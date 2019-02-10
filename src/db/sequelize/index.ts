@@ -1,6 +1,6 @@
 import { Sequelize} from 'sequelize-typescript';
-import { User as IUser, Group as IGroup, Database } from '..';
-import { Log } from '../../Log';
+import { User as IUser, Group as IGroup, Database } from 'db';
+import { Log } from 'Log';
 import { SequelizeConfig } from 'sequelize-typescript/lib/types/SequelizeConfig';
 import { User } from './models/User';
 import { Tag } from './models/Tag';
