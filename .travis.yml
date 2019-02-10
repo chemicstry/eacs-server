@@ -28,8 +28,8 @@ after_success:
       wget https://github.com/estesp/manifest-tool/releases/download/v0.9.0/manifest-tool-linux-amd64
       mv manifest-tool-linux-amd64 manifest-tool
       chmod +x manifest-tool
-      ./manifest-tool push from-args --platforms linux/amd64,linux/arm32v6 --template "chemicstry/eacs-server:OS-ARCH-${COMMIT}" --target "chemicstry/eacs-server:$COMMIT"
-      ./manifest-tool push from-args --platforms linux/amd64,linux/arm32v6 --template "chemicstry/eacs-server:OS-ARCH-${COMMIT}" --target "chemicstry/eacs-server:latest"
+      ./manifest-tool push from-args --platforms linux/amd64,linux/arm32v6 --template "chemicstry/eacs-server:OS-ARCH-$COMMIT" --target "chemicstry/eacs-server:$COMMIT"
+      ./manifest-tool push from-args --platforms linux/amd64,linux/arm32v6 --template "chemicstry/eacs-server:OS-ARCH-$COMMIT" --target "chemicstry/eacs-server:latest"
     fi
 
 
