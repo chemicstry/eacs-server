@@ -21,7 +21,7 @@ after_success:
   - export REPO=chemicstry/eacs-server
   - export TAG=`if [ "$TRAVIS_BRANCH" == "master" ]; then echo "latest"; else echo $TRAVIS_BRANCH ; fi`
   - docker run --rm --privileged multiarch/qemu-user-static:register --reset
-  - docker build -f Dockerfile -t $REPO:$COMMIT --build-arg target=$ARCH/node:10-stretch .
+  - docker build -f Dockerfile -t $REPO:$COMMIT --build-arg target=$ARCH/node:10-alpine .
   - docker tag $REPO:$COMMIT $REPO:$ARCH-$TAG
   - docker tag $REPO:$COMMIT $REPO:$ARCH-travis-$TRAVIS_BUILD_NUMBER
   - docker push $REPO
@@ -35,5 +35,5 @@ env:
   matrix:
     - ARCH=amd64
 #    - ARCH=arm32v6
-#    - ARCH=arm32v7
-    - ARCH=arm64v8
+    - ARCH=arm32v7
+#    - ARCH=arm64v8
