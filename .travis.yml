@@ -8,7 +8,6 @@ node_js:
 - stable
 
 install:
-- sudo apt-get install qemu-user
 - yarn install
 
 script:
@@ -22,7 +21,7 @@ after_success:
   - export REPO=chemicstry/eacs-server
   - export TAG=`if [ "$TRAVIS_BRANCH" == "master" ]; then echo "latest"; else echo $TRAVIS_BRANCH ; fi`
   - docker run --rm --privileged multiarch/qemu-user-static:register --reset
-  - docker build --volume type=bind,source=/usr/bin/qemu-arm-static,target=/usr/bin/qemu-arm-static -f Dockerfile -t $REPO:$COMMIT --build-arg node=$ARCH/node:10-stretch .
+  - docker build -f Dockerfile -t $REPO:$COMMIT --build-arg target=$ARCH/node:10-stretch .
   - docker tag $REPO:$COMMIT $REPO:$ARCH-$TAG
   - docker tag $REPO:$COMMIT $REPO:$ARCH-travis-$TRAVIS_BUILD_NUMBER
   - docker push $REPO
