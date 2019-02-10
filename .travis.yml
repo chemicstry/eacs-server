@@ -8,6 +8,7 @@ node_js:
 - stable
 
 install:
+- apt-get install qemu-user-static
 - yarn install
 
 script:
@@ -17,12 +18,11 @@ after_script:
 - cat coverage/lcov.info | node_modules/coveralls/bin/coveralls.js
 
 after_success:
-  - 
   - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
   - export REPO=chemicstry/eacs-server
   - export TAG=`if [ "$TRAVIS_BRANCH" == "master" ]; then echo "latest"; else echo $TRAVIS_BRANCH ; fi`
   - docker run --rm --privileged multiarch/qemu-user-static:register --reset
-  - docker build -f Dockerfile -t $REPO:$COMMIT --build-arg node=$ARCH/node:10 .
+  - docker build -f Dockerfile -t $REPO:$COMMIT --build-arg node=$ARCH/node:10-alpine .
   - docker tag $REPO:$COMMIT $REPO:$ARCH-$TAG
   - docker tag $REPO:$COMMIT $REPO:$ARCH-travis-$TRAVIS_BUILD_NUMBER
   - docker push $REPO
