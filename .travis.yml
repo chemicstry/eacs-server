@@ -8,7 +8,7 @@ node_js:
 - stable
 
 install:
-- apt-get install qemu-user-static
+- sudo apt-get install qemu-user-static
 - yarn install
 
 script:
