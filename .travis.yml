@@ -21,10 +21,16 @@ after_success:
   - export REPO=chemicstry/eacs-server
   - export TAG=`if [ "$TRAVIS_BRANCH" == "master" ]; then echo "latest"; else echo $TRAVIS_BRANCH ; fi`
   - docker run --rm --privileged multiarch/qemu-user-static:register --reset
-  - docker build -f Dockerfile -t $REPO:$COMMIT --build-arg target=$ARCH/node:10-alpine .
-  - docker tag $REPO:$COMMIT $REPO:$ARCH-$TAG
-  - docker tag $REPO:$COMMIT $REPO:$ARCH-travis-$TRAVIS_BUILD_NUMBER
+  - docker build -f Dockerfile -t $REPO:linux-$ARCH-$COMMIT --build-arg target=$ARCH/node:10-alpine .
   - docker push $REPO
+  - >
+    if [[ $ARCH == "amd64" ]]; then
+      wget https://github.com/estesp/manifest-tool/releases/download/v0.9.0/manifest-tool-linux-amd64
+      mv manifest-tool-linux-amd64 manifest-tool
+      chmod +x manifest-tool
+      ./manifest-tool push from-args --platforms linux/amd64,linux/arm32v6 --template "chemicstry/eacs-server:OS-ARCH-${COMMIT}" --target "chemicstry/eacs-server:$COMMIT"
+      ./manifest-tool push from-args --platforms linux/amd64,linux/arm32v6 --template "chemicstry/eacs-server:OS-ARCH-${COMMIT}" --target "chemicstry/eacs-server:latest"
+    fi
 
 
 env:
@@ -35,5 +41,3 @@ env:
   matrix:
     - ARCH=amd64
     - ARCH=arm32v6
-#    - ARCH=arm32v7
-#    - ARCH=arm64v8
