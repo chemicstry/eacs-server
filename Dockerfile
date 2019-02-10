@@ -3,8 +3,6 @@ ARG node=node:10-alpine
 # Node 8.x
 FROM $node
 
-COPY qemu-arm-static /usr/bin/qemu-arm-static
-
 # Copy app files
 WORKDIR /app
 COPY . /app
