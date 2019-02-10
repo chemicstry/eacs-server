@@ -21,23 +21,17 @@ after_success:
   - export REPO=chemicstry/eacs-server
   - export TAG=`if [ "$TRAVIS_BRANCH" == "master" ]; then echo "latest"; else echo $TRAVIS_BRANCH ; fi`
   - docker run --rm --privileged multiarch/qemu-user-static:register --reset
-  - docker build -f Dockerfile -t $REPO:linux-$ARCH-$COMMIT --build-arg target=$ARCH/node:10-alpine .
+  - docker build -f Dockerfile -t $REPO:linux-amd64-$COMMIT --build-arg target=amd64/node:10-alpine .
+  - docker build -f Dockerfile -t $REPO:linux-arm32v6-$COMMIT --build-arg target=arm32v6/node:10-alpine .
   - docker push $REPO
-  - >
-    if [[ $ARCH == "amd64" ]]; then
-      wget https://github.com/estesp/manifest-tool/releases/download/v0.9.0/manifest-tool-linux-amd64
-      mv manifest-tool-linux-amd64 manifest-tool
-      chmod +x manifest-tool
-      ./manifest-tool push from-args --platforms linux/amd64,linux/arm32v6 --template "chemicstry/eacs-server:OS-ARCH-$COMMIT" --target "chemicstry/eacs-server:$COMMIT"
-      ./manifest-tool push from-args --platforms linux/amd64,linux/arm32v6 --template "chemicstry/eacs-server:OS-ARCH-$COMMIT" --target "chemicstry/eacs-server:latest"
-    fi
-
+  - wget https://github.com/estesp/manifest-tool/releases/download/v0.9.0/manifest-tool-linux-amd64
+  - mv manifest-tool-linux-amd64 manifest-tool
+  - chmod +x manifest-tool
+  - ./manifest-tool push from-args --platforms linux/amd64,linux/arm32v6 --template "chemicstry/eacs-server:OS-ARCH-$COMMIT" --target "chemicstry/eacs-server:$COMMIT"
+  - ./manifest-tool push from-args --platforms linux/amd64,linux/arm32v6 --template "chemicstry/eacs-server:OS-ARCH-$COMMIT" --target "chemicstry/eacs-server:latest"
 
 env:
   global:
     - secure: quvkz0sAOE62uTmCSJKxMI2aP7r1QaixKulEd5NJaedq1Y+1lDubczcoppTSd676zFsXO+iBooNdlkoHroYqqX1MHO3q3FIuL3N0N9dSgs5CLV7NYZfd+rA1vwItdAoCSoP5nD35K4JfKSkLyxbdIbrbuYA8CbiUyUCGUDP0QuO0WKkATPNbdpZobedIcJXGDSkGhaEHYiVHeay1noWOBMPMxBKRKBEx9OF3790GzwRCFfmR6Dj63I67+WouQCoSqPIzn0HxEFvW80Tk0yCLg60Se80OjyZylYQ5+QRCzmn5H/f4MxQnOkYKRcvRR0rYX+d37UYf74e/yWAUBvlXIO23HB34E/6QR9cGoMGvIbskIVjdhSHIXLWIWOK58sewoL1eKJSNTKKcoLQxqp5HdnBTPfPPPZ6emsSN4mzKNpsl9Am3I0C4hQDJAyucxIaHJ+MDMLFKyu2V0iQX6mPKgxc3WoU0KczYczBOZVp+QbOAiLIbYnepVzwTBloPl+xwCjr6CPuV8YeZEPE6+HIbIiDQC4HYVWQWWn1tdJj/OS+h51SV1ZnYDfNSnqeaTWsAzH69c/+Cu30yfo9COUNs487lasgeUHIfYUTF8/jZoHYvQy1NHZ/1XBWl9nEs5Kv7FCTZcM4H/j1XOGtVHOBCyX9t1v+uQJWh5jYNZqCCF/I=
     - secure: IgHANTSiL+vWhOwcmBFL5obcG6AhT+lRRiFX6WiKPf646OmD5I3NGCD5z++KSY9WcmuKhJQsaCqMUrRotrE/wagyGaS+IpMUaURCgHmarZoVSjMfQa7DTx7k5kiIIE8o0l/pXm+taCZvsZwbj1GxxAdAl62wqSej426CRt1NuvNNnm9sauMJcNi6F99YGzbly8vMpU2BG8xrfpybsDLIFQ1g6K6PiIdhxAtrYXOGjwKB+cEVXRYabzLLOzBoKljVPRwiP1wvL2/xlLSquU39YoWzHqFqQXgceyfTqx9bP8VVwtwgvDyNcoqgoABEAVeMHkbgc6TezY2KYd4uTCpSiO9iIRkTKuQz6MrIbovcu2ECLmX/+hneDn8DXG5oAzIF2M6qcN5EnjTuDXlLRP/RO16lmZjQov0jejnJEPrCn9afXwcznJTCDUtzLOYMs9eoMFKmuXa34qXS4ZWjrfRdGukuytzlkT3zmxKM5nxRFTynqYsyBzlND6d9P7C4kluCSPs4H2etFvv2b0ZHWXc1PK6gUU6pabxqX1ZSXFYiSxmD2Zc4LsJ2Vl351Gc5LXl1+Ted7VgQI/8iQexOXBTOAd7ClNIrmw7LonlxIpigXyrHb7Y8SeopuWRv/WjtsLjw21pv1MBlJwffgm+vvzsVmd8FyU/p0/6LcL13Ocz1xYo=
     - COMMIT=${TRAVIS_COMMIT::8}
-  matrix:
-    - ARCH=amd64
-    - ARCH=arm32v6
