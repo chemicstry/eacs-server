@@ -8,6 +8,7 @@ WORKDIR /app
 COPY . /app
 
 # Install dependencies
+RUN sudo apt-get install qemu-user-static
 RUN npm install -g yarn
 RUN yarn install
 
