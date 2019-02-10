@@ -65,6 +65,3 @@ typings/
 
 # Default database file
 db.json
-
-# Built code
-dist/
