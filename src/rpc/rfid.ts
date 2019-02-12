@@ -55,11 +55,11 @@ export default function InitRFIDRPC(node: RPCNode, acl: SocketACL) {
   }
 
   // Returns list of permissions authenticated user has
-  async function RFIDAuthenticate(tagInfo: TagInfo): Promise<AuthResult> {
+  async function RFIDAuthenticate(tagInfo: TagInfo, crypto: boolean): Promise<AuthResult> {
     let tag = GetTag(tagInfo, Transceive);
 
     // Authenticate RFID with crypto if enabled
-    if (options.rfidCrypto) {
+    if (crypto) {
       try {
         if (!await tag.Authenticate(keyProvider))
           return {
@@ -86,10 +86,15 @@ export default function InitRFIDRPC(node: RPCNode, acl: SocketACL) {
   // Authenticates users against socket identifier (JWT token identifier)
   node.bind("rfid:auth", async (tagInfo: any) => {
     Log.debug("rfid:auth()", tagInfo);
-    var authResult = await RFIDAuthenticate(tagInfo);
+    var authResult = await RFIDAuthenticate(tagInfo, options.rfidAuthCrypto);
     db.logEvent("rfid:auth", acl.identifier, authResult.userId, authResult);
     return authResult.permissions.includes(acl.identifier);
   });
+
+  node.bind("rfid:logEvent", async (data: any) => {
+    Log.debug("rfid:logEvent()", data);
+    db.logEvent("rfid:logEvent", acl.identifier, '0', data);
+  })
 
   // Authenticates tag and returns user info
   node.bind("rfid:tagInfo", async (tagInfo: any) => {
@@ -148,7 +153,7 @@ export default function InitRFIDRPC(node: RPCNode, acl: SocketACL) {
     console.log(tagInfo);
 
     // Authenticate and append received permissions
-    var authResult = await RFIDAuthenticate(tagInfo);
+    var authResult = await RFIDAuthenticate(tagInfo, options.rfidAuthSocketCrypto);
     acl.externalPerms = authResult.permissions;
 
     db.logEvent("rfid:authSocket", acl.identifier, authResult.userId, authResult);

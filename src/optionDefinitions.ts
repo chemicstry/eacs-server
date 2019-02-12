@@ -62,10 +62,16 @@ export default [
         description: 'SQL database connection URI'
     },
     {
-        name: 'rfidCrypto',
+        name: 'rfidAuthCrypto',
+        type: Boolean,
+        defaultValue: false,
+        description: 'Use cryptogtaphy for rfid:auth endpoint'
+    },
+    {
+        name: 'rfidAuthSocketCrypto',
         type: Boolean,
         defaultValue: true,
-        description: 'Use cryptogtaphy for RFID tag authentication'
+        description: 'Use cryptogtaphy for rfid:auth endpoint'
     },
     {
         name: 'hkdf_ikm',
