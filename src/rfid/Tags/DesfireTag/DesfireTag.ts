@@ -217,7 +217,7 @@ class DesfireTag extends Tag
         i = cryptogram.writeInt32LE(crc, i);
 
         // Pad to key length blocks
-        while (i % key.BlockLength() != 0)
+        while (i % this.SessionKey.BlockLength() != 0)
             i = cryptogram.writeUInt8(0x00, i);
 
         // Encrypt
