@@ -244,7 +244,11 @@ class SequelizeDB implements Database {
     })
   }
 
-  public async logEvent(event: string, identifier: string, userId: string, data: object) {
+  public async logEvent(event: string, identifier: string, _userId: string, data: object) {
+    var userId = parseInt(_userId);
+    if (isNaN(userId))
+      userId = 0;
+
     await Event.create({
       event,
       identifier,
