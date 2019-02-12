@@ -8,6 +8,8 @@ import { options } from 'options';
 import { HKDF } from 'rfid/KeyProvider';
 import { Tag, TagInfo, TagConstructor } from 'rfid/Tag';
 import { TagFactory } from 'rfid/TagFactory';
+import DesfireTag from 'rfid/Tags/DesfireTag/DesfireTag';
+import { DesfireKey2K3DESDefault } from 'rfid/Tags/DesfireTag/DesfireKey';
 
 // Initial keying material used to derive keys
 const IKM = Buffer.from(options.hkdf_ikm, 'hex');
@@ -146,6 +148,26 @@ export default function InitRFIDRPC(node: RPCNode, acl: SocketACL) {
 
     return res;
   });
+
+  node.bind("rfid:eraseKey", async (tagInfo: any) => {
+    RequirePermission(acl, "rfid:eraseKey");
+
+    const defaultKey = new DesfireKey2K3DESDefault();
+    let tag = GetTag(tagInfo, Transceive);
+
+    // Initialize key
+    try {
+      var res = await tag.Authenticate(keyProvider);
+      if (res)
+        res = await (<DesfireTag>tag).ChangeKey(0, defaultKey);
+      db.logEvent("rfid:eraseKey", acl.identifier, '', {res});
+    } catch (e) {
+      Log.error(`rfid:eraseKey(): error: ${e.message}`, e);
+      throw new RPCMethodError(RPCErrors.INITIALIZE_KEY_FAILED, e.message);
+    }
+
+    return res;
+  })
 
   // authenticate rfid tag and append user permission to socket permissions
   node.bind("rfid:authSocket", async (tagInfo: any) => {
