@@ -89,8 +89,9 @@ export default function InitRFIDRPC(node: RPCNode, acl: SocketACL) {
   node.bind("rfid:auth", async (tagInfo: any) => {
     Log.debug("rfid:auth()", tagInfo);
     var authResult = await RFIDAuthenticate(tagInfo, options.rfidAuthCrypto);
-    db.logEvent("rfid:auth", acl.identifier, authResult.userId, authResult);
-    return authResult.permissions.includes(acl.identifier);
+    var allowed = authResult.permissions.includes(acl.identifier);
+    db.logEvent("rfid:auth", acl.identifier, authResult.userId, {allowed});
+    return allowed;
   });
 
   node.bind("rfid:logEvent", async (data: any) => {
