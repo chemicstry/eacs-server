@@ -2,18 +2,18 @@
 import { options, initOptions } from './options';
 initOptions();
 
-import { AuthenticatedSocket, SocketACL } from './socket';
+import { AuthenticatedServer, SocketACL } from './socket';
 import * as WebSocket from 'ws';
 import { readFileSync } from 'fs';
 import { IncomingMessage } from 'http';
 import * as https from 'https';
 import { Log } from 'Log';
-import { WSTransport, RPCNode } from 'modular-json-rpc';
 import LowDB from 'db/lowdb';
 import SequelizeDB from 'db/sequelize';
 import bonjour from 'bonjour';
 import { initDB } from 'dbInstance';
 import InitRPC from 'rpc';
+import { Client, ClientRegistry } from 'client';
 
 // Load JWT public key
 const jwtPublicKey = readFileSync(options.jwtPublicKey, "utf8");
@@ -21,22 +21,23 @@ const jwtPublicKey = readFileSync(options.jwtPublicKey, "utf8");
 // Setup EACSSocket (websockets with JWT auth)
 if (options.tls_cert.length) {
   // With TLS
-  var server = https.createServer({
+  var http_server = https.createServer({
     cert: readFileSync(options.tls_cert),
     key: readFileSync(options.tls_key)
   }).listen(options.port, options.host);
 
-  var socket = new AuthenticatedSocket({
+  var server = new AuthenticatedServer({
     jwtPubKey: jwtPublicKey,
     jwtRequired: options.jwtRequired,
-    server
+    clientTracking: true,
+    server: http_server
   });
 
   Log.info(`Service started on ${options.host}:${options.port} with TLS encryption`)
 }
 else {
   // Without TLS
-  var socket = new AuthenticatedSocket({
+  var server = new AuthenticatedServer({
     host: options.host,
     port: options.port,
     jwtPubKey: jwtPublicKey,
@@ -65,25 +66,25 @@ if (options.dbType === "sequelize") {
   process.exit(1);
 }
 
-socket.on('connection', (ws: WebSocket, req: IncomingMessage) => {
+let registry = new ClientRegistry();
+
+server.on('connection', (ws: WebSocket, req: IncomingMessage) => {
   let acl = <SocketACL>(<any>req).acl;
 
-  Log.info(`index: New connection from ${req.connection.remoteAddress}. Identifier: ${(acl.jwtToken ? acl.jwtToken.identifier : 'n/a')}`);
+  Log.info(`New connection from ${req.connection.remoteAddress}. Identifier: ${(acl.jwtToken ? acl.jwtToken.identifier : 'n/a')}`);
 
-  // Create RPC transport over websocket
-  let transport = new WSTransport(ws);
+  let client = new Client(ws, acl);
+  registry.add(client);
 
-  // Create bidirectional RPC connection
-  let node = new RPCNode(transport);
-
-  // Handle error
-  node.on('error', (e) => {
-    Log.error("Internal JSONRPC Error", e);
-  });
   ws.on('error', (e) => {
     Log.error("WebSocket Error", e);
   });
 
+  ws.on('close', () => {
+    Log.info(`Client ${req.connection.remoteAddress} disconnected. Identifier: ${(acl.jwtToken ? acl.jwtToken.identifier : 'n/a')}`);
+    registry.remove(client);
+  })
+
   // Bind all RPC methods
-  InitRPC(node, acl);
+  InitRPC(client, registry);
 });

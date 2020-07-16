@@ -53,7 +53,7 @@ class SocketACL
   }
 }
 
-interface AuthenticatedSocketOptions extends WebSocket.ServerOptions {
+interface AuthenticatedServerOptions extends WebSocket.ServerOptions {
   jwtPubKey?: string,
   jwtRequired: boolean
 }
@@ -61,10 +61,10 @@ interface AuthenticatedSocketOptions extends WebSocket.ServerOptions {
 type wsClientInfo = { origin: string; secure: boolean; req: http.IncomingMessage };
 type wsVerifyCallback = (res: boolean, code?: number, message?: string) => void;
 
-class AuthenticatedSocket extends WebSocket.Server {
-  options: AuthenticatedSocketOptions;
+class AuthenticatedServer extends WebSocket.Server {
+  options: AuthenticatedServerOptions;
 
-  constructor(options: AuthenticatedSocketOptions) {
+  constructor(options: AuthenticatedServerOptions) {
     options = {
       ...options,
       verifyClient: (info, cb) => this.verifyClient(info, cb)
@@ -121,8 +121,8 @@ class AuthenticatedSocket extends WebSocket.Server {
 }
 
 export {
-  AuthenticatedSocketOptions,
-  AuthenticatedSocket,
+  AuthenticatedServerOptions,
+  AuthenticatedServer,
   SocketACL,
   JWTToken,
 }

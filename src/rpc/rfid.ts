@@ -10,6 +10,7 @@ import { Tag, TagInfo, TagConstructor } from 'rfid/Tag';
 import { TagFactory } from 'rfid/TagFactory';
 import DesfireTag from 'rfid/Tags/DesfireTag/DesfireTag';
 import { DesfireKey2K3DESDefault } from 'rfid/Tags/DesfireTag/DesfireKey';
+import { Client, ClientRegistry } from 'client';
 
 // Initial keying material used to derive keys
 const IKM = Buffer.from(options.hkdf_ikm, 'hex');
@@ -46,11 +47,20 @@ function GetTag(tagInfoRPC: any, transceive: TransceiveFn): Tag {
   return new TagClass(taginfo, (buf: Buffer) => transceive(buf));
 }
 
-export default function InitRFIDRPC(node: RPCNode, acl: SocketACL) {
+// Alarm disarm results
+enum DisarmReult {
+  SUCCESS               = 0, // Successfully disarmed
+  ALREADY_DISARMED      = 1, // Alarm is already inactive
+  PERMISSION_DENIED     = 2, // User does not have permission to disarm
+  ALARM_NOT_FOUND       = 3, // Alarm is not connected to the server
+  FAIL                  = 4, // Disarm failed inside alarm client
+}
+
+export default function InitRFIDRPC(client: Client, registry: ClientRegistry) {
   // Exchanges data with remote tag
   async function Transceive(buf: Buffer) {
     // Call remote transceive function
-    var result = await node.call("rfid:transceive", buf.toString('hex'));
+    var result = await client.rpc.call("rfid:transceive", buf.toString('hex'));
 
     // Convert result to buffer
     return Buffer.from(<string>result, 'hex');
@@ -86,22 +96,54 @@ export default function InitRFIDRPC(node: RPCNode, acl: SocketACL) {
   }
 
   // Authenticates users against socket identifier (JWT token identifier)
-  node.bind("rfid:auth", async (tagInfo: any) => {
+  client.rpc.bind("rfid:auth", async (tagInfo: any) => {
     Log.debug("rfid:auth()", tagInfo);
     var authResult = await RFIDAuthenticate(tagInfo, options.rfidAuthCrypto);
-    var allowed = authResult.permissions.includes(acl.identifier);
-    db.logEvent("rfid:auth", acl.identifier, authResult.userId, {allowed});
+    var allowed = authResult.permissions.includes(client.acl.identifier);
+    db.logEvent("rfid:auth", client.acl.identifier, authResult.userId, {allowed});
     return allowed;
   });
 
-  node.bind("rfid:logEvent", async (data: any) => {
+  // Authenticates users against socket identifier and attempts to disarm alarm
+  client.rpc.bind("rfid:authDisarm", async (tagInfo: any) => {
+    Log.debug("rfid:authDisarm()", tagInfo);
+    var authResult = await RFIDAuthenticate(tagInfo, options.rfidAuthCrypto);
+    var allowed = authResult.permissions.includes(client.acl.identifier);
+
+    // attempt disarm
+    var disarm_result = await (async () => {
+      if (!authResult.permissions.includes(client.acl.identifier + "-disarm"))
+        return DisarmReult.PERMISSION_DENIED;
+      
+      let alarm = registry.findByIdentifier(client.acl.identifier + "-alarm")[0];
+      if (!alarm)
+        return DisarmReult.ALARM_NOT_FOUND;
+      
+      try {
+        return await alarm.rpc.call("alarm:disarm");
+      } catch(e) {
+        return DisarmReult.FAIL;
+      }
+    })();
+
+    let result = {
+      auth: allowed,
+      disarm: disarm_result,
+    };
+
+    db.logEvent("rfid:authDisarm", client.acl.identifier, authResult.userId, result);
+
+    return result;
+  });
+
+  client.rpc.bind("rfid:logEvent", async (data: any) => {
     Log.debug("rfid:logEvent()", data);
-    db.logEvent("rfid:logEvent", acl.identifier, '0', data);
+    db.logEvent("rfid:logEvent", client.acl.identifier, '0', data);
   })
 
   // Authenticates tag and returns user info
-  node.bind("rfid:tagInfo", async (tagInfo: any) => {
-    RequirePermission(acl, "rfid:tagInfo");
+  client.rpc.bind("rfid:tagInfo", async (tagInfo: any) => {
+    RequirePermission(client.acl, "rfid:tagInfo");
     Log.debug("rfid:tagInfo()", tagInfo);
 
     let tag = GetTag(tagInfo, Transceive);
@@ -133,15 +175,15 @@ export default function InitRFIDRPC(node: RPCNode, acl: SocketACL) {
     return info;
   });
 
-  node.bind("rfid:initKey", async (tagInfo: any) => {
-    RequirePermission(acl, "rfid:initKey");
+  client.rpc.bind("rfid:initKey", async (tagInfo: any) => {
+    RequirePermission(client.acl, "rfid:initKey");
 
     let tag = GetTag(tagInfo, Transceive);
 
     // Initialize key
     try {
       var res = await tag.InitializeKey(keyProvider);
-      db.logEvent("rfid:initKey", acl.identifier, '', {});
+      db.logEvent("rfid:initKey", client.acl.identifier, '', {});
     } catch (e) {
       Log.error(`rfid:initKey(): error: ${e.message}`, e);
       throw new RPCMethodError(RPCErrors.INITIALIZE_KEY_FAILED, e.message);
@@ -150,8 +192,8 @@ export default function InitRFIDRPC(node: RPCNode, acl: SocketACL) {
     return res;
   });
 
-  node.bind("rfid:eraseKey", async (tagInfo: any) => {
-    RequirePermission(acl, "rfid:eraseKey");
+  client.rpc.bind("rfid:eraseKey", async (tagInfo: any) => {
+    RequirePermission(client.acl, "rfid:eraseKey");
 
     const defaultKey = new DesfireKey2K3DESDefault();
     let tag = GetTag(tagInfo, Transceive);
@@ -161,7 +203,7 @@ export default function InitRFIDRPC(node: RPCNode, acl: SocketACL) {
       var res = await tag.Authenticate(keyProvider);
       if (res)
         res = await (<DesfireTag>tag).ChangeKey(0, defaultKey);
-      db.logEvent("rfid:eraseKey", acl.identifier, '', {res});
+      db.logEvent("rfid:eraseKey", client.acl.identifier, '', {res});
     } catch (e) {
       Log.error(`rfid:eraseKey(): error: ${e.message}`, e);
       throw new RPCMethodError(RPCErrors.INITIALIZE_KEY_FAILED, e.message);
@@ -171,15 +213,15 @@ export default function InitRFIDRPC(node: RPCNode, acl: SocketACL) {
   })
 
   // authenticate rfid tag and append user permission to socket permissions
-  node.bind("rfid:authSocket", async (tagInfo: any) => {
+  client.rpc.bind("rfid:authSocket", async (tagInfo: any) => {
     Log.debug("rfid:authSocket()", tagInfo);
     console.log(tagInfo);
 
     // Authenticate and append received permissions
     var authResult = await RFIDAuthenticate(tagInfo, options.rfidAuthSocketCrypto);
-    acl.externalPerms = authResult.permissions;
+    client.acl.externalPerms = authResult.permissions;
 
-    db.logEvent("rfid:authSocket", acl.identifier, authResult.userId, authResult);
+    db.logEvent("rfid:authSocket", client.acl.identifier, authResult.userId, authResult);
 
     // return granted permissions
     return authResult.permissions;

@@ -4,10 +4,11 @@ import { Log } from 'Log';
 import { RPCMethodError } from 'modular-json-rpc/dist/Defines';
 import { RequirePermission, RPCErrors } from 'utils';
 import { SocketACL } from 'socket';
+import { Client, ClientRegistry } from 'client';
 
-export default function InitAdminRPC(node: RPCNode, acl: SocketACL) {
-  node.bind("admin:getUsers", async () => {
-    RequirePermission(acl, "admin:getUsers");
+export default function InitAdminRPC(client: Client, registry: ClientRegistry) {
+  client.rpc.bind("admin:getUsers", async () => {
+    RequirePermission(client.acl, "admin:getUsers");
     try {
       return db.getUsers();
     } catch (err) {
@@ -16,9 +17,9 @@ export default function InitAdminRPC(node: RPCNode, acl: SocketACL) {
     }
   });
 
-  node.bind("admin:upsertUser", async (data: any) => {
+  client.rpc.bind("admin:upsertUser", async (data: any) => {
     Log.info("admin:upsertUser", data);
-    RequirePermission(acl, "admin:upsertUser");
+    RequirePermission(client.acl, "admin:upsertUser");
     try {
       db.upsertUser(data);
       return true;
@@ -28,9 +29,9 @@ export default function InitAdminRPC(node: RPCNode, acl: SocketACL) {
     }
   });
 
-  node.bind("admin:deleteUser", async (id: string) => {
+  client.rpc.bind("admin:deleteUser", async (id: string) => {
     Log.info("admin:deleteUser", id);
-    RequirePermission(acl, "admin:deleteUser");
+    RequirePermission(client.acl, "admin:deleteUser");
     try {
       db.deleteUser(id);
       return true;
@@ -40,8 +41,8 @@ export default function InitAdminRPC(node: RPCNode, acl: SocketACL) {
     }
   })
 
-  node.bind("admin:getGroups", async () => {
-    RequirePermission(acl, "admin:getGroups");
+  client.rpc.bind("admin:getGroups", async () => {
+    RequirePermission(client.acl, "admin:getGroups");
     try {
       return db.getGroups();
     } catch (err) {
@@ -50,9 +51,9 @@ export default function InitAdminRPC(node: RPCNode, acl: SocketACL) {
     }
   });
 
-  node.bind("admin:upsertGroup", async (data: any) => {
+  client.rpc.bind("admin:upsertGroup", async (data: any) => {
     Log.info("admin:upsertGroup", data);
-    RequirePermission(acl, "admin:upsertGroup");
+    RequirePermission(client.acl, "admin:upsertGroup");
     try {
       db.upsertGroup(data);
       return true;
@@ -62,9 +63,9 @@ export default function InitAdminRPC(node: RPCNode, acl: SocketACL) {
     }
   });
 
-  node.bind("admin:deleteGroup", async (id: string) => {
+  client.rpc.bind("admin:deleteGroup", async (id: string) => {
     Log.info("admin:deleteGroup", id);
-    RequirePermission(acl, "admin:deleteGroup");
+    RequirePermission(client.acl, "admin:deleteGroup");
     try {
       db.deleteGroup(id);
       return true;
