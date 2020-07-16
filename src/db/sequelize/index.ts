@@ -1,7 +1,6 @@
-import { Sequelize} from 'sequelize-typescript';
+import { Sequelize, SequelizeOptions} from 'sequelize-typescript';
 import { User as IUser, Group as IGroup, Database } from 'db';
 import { Log } from 'Log';
-import { SequelizeConfig } from 'sequelize-typescript/lib/types/SequelizeConfig';
 import { User } from './models/User';
 import { Tag } from './models/Tag';
 import { Group } from './models/Group';
@@ -13,15 +12,15 @@ import { Event } from './models/Event';
 class SequelizeDB implements Database {
   private db!: Sequelize;
 
-  constructor(config: SequelizeConfig) {
-    this.initDatabase(config);
+  constructor(uri: string, config: SequelizeOptions = {}) {
+    this.initDatabase(uri, config);
   }
 
-  private async initDatabase(config: SequelizeConfig) {
+  private async initDatabase(uri: string, config: SequelizeOptions) {
     try {
-      this.db = new Sequelize({
+      this.db = new Sequelize(uri, {
         ...config,
-        modelPaths: [path.join(__dirname, "models")]
+        models: [path.join(__dirname, "models")]
       });
       await this.db.authenticate();
       await this.db.sync();

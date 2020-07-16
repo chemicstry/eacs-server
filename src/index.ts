@@ -55,10 +55,7 @@ if (options.mdns) {
 
 // Init database
 if (options.dbType === "sequelize") {
-  initDB(new SequelizeDB({
-    url: options.sequelizeURL,
-    operatorsAliases: false
-  }));
+  initDB(new SequelizeDB(options.sequelizeURL));
 } else if (options.dbType == "lowdb") {
   initDB(new LowDB(options.lowdbFile))
 } else {

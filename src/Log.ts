@@ -1,8 +1,8 @@
-import * as winston from 'winston';
+import { transports, createLogger } from 'winston';
 
-const Log = new winston.Logger({
+const Log = createLogger({
     transports: [
-        new winston.transports.Console({
+        new transports.Console({
             level: 'debug'
         }),
     ]

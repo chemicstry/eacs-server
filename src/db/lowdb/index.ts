@@ -1,11 +1,25 @@
-import lowdb from 'lowdb';
+import Lowdb, { LowdbAsync } from 'lowdb';
 import FileAsync from 'lowdb/adapters/FileAsync';
 import { Log } from 'Log';
 import ShortId from 'shortid';
 import { Database, Group, User } from 'db';
 
+interface Event {
+    date: number;
+    event: string;
+    identifier: string;
+    userId: string;
+    data: object;
+}
+  
+interface DatabaseSchema {
+    users: Array<User>;
+    groups: Array<Group>;
+    events: Array<Event>
+}  
+
 class LowDB implements Database {
-    private db!: lowdb.LowdbAsync<any>;
+    private db!: LowdbAsync<DatabaseSchema>;
 
     constructor(dbFile: string) {
         this.initDatabase(dbFile);
@@ -13,8 +27,8 @@ class LowDB implements Database {
 
     private async initDatabase(dbFile: string) {
         try {
-            const adapter = new FileAsync(dbFile);
-            this.db = await lowdb(adapter);
+            const adapter = new FileAsync<DatabaseSchema>(dbFile);
+            this.db = await Lowdb(adapter);
 
             this.db.defaults({
                 users: [],
@@ -26,8 +40,8 @@ class LowDB implements Database {
         }
     }
 
-    public async findUserIdByTag(UID: String) {
-        let users = <User[]><any>await this.db.get('users').filter(u => {
+    public async findUserIdByTag(UID: string) {
+        let users = await this.db.get('users').filter(u => {
             return u.tags.includes(UID);
         }).value();
 
@@ -38,10 +52,10 @@ class LowDB implements Database {
     }
 
     public async getUserPermissions(userId: string) {
-        var user = <User><any>await this.db.get('users').find({ id: userId }).value();
+        var user = await this.db.get('users').find({ id: userId }).value();
 
         // Find groups that user belongs to
-        var groups = <Group[]><any>await this.db.get('groups').filter(g => {
+        var groups = await this.db.get('groups').filter(g => {
             return user.groups.includes(g.name);
         }).value();
 
